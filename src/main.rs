@@ -122,6 +122,18 @@ macro_rules! read_matrix {{
     }};
 }}
 
+macro_rules! print_vectorln {{
+    ( $v:ident ) => {{
+        println!(
+            "{{}}",
+            $v.iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(" ")
+        );
+    }};
+}}
+
 fn main() {{
     // Code Here!
 }}
