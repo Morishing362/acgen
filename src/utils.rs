@@ -6,13 +6,13 @@ pub fn get_csrf_token_from(html_body: String) -> String {
     let capture = csrf_input_regex
         .captures(&html_body)
         .expect("csrf_token input not found");
-    let csrf_input_tag = capture.get(0).unwrap().as_str();
+    let csrf_input_tag = capture.get(0).expect("csrf_token not found.").as_str();
 
     let csrf_value_regex = Regex::new(r#"value=".*""#).unwrap();
     let capture = csrf_value_regex
         .captures(&csrf_input_tag)
         .expect("csrf_token input not found");
-    let csrf_value = capture.get(0).unwrap().as_str();
+    let csrf_value = capture.get(0).expect("csrf_token not found.").as_str();
 
     let csrf_token = &csrf_value[7..csrf_value.len() - 1];
 
@@ -40,16 +40,16 @@ pub fn get_user_info_from_std() -> (String, String) {
 
 pub fn get_task_info() -> (String, String) {
     // Read toml file.
-    let mut file = File::open("Cargo.toml").expect("Failed to open file");
+    let mut file = File::open("Cargo.toml").expect("Failed to open `Cargo.toml`.");
     let mut toml_body = String::new();
     file.read_to_string(&mut toml_body)
-        .expect("Failed to read file");
+        .expect("Failed to read `Cargo.toml`.");
 
     // Get problem ID and contest ID from toml body.
     let problem_id_regex =
         Regex::new(r#"abc[0-9]{3}_[a-zA-Z]{1,3}"#).expect("Problem id not found.");
     let capture = problem_id_regex.captures(&toml_body).unwrap();
-    let problem_id = capture.get(0).unwrap().as_str();
+    let problem_id = capture.get(0).expect("Problem id not found.").as_str();
     let contest_id = &problem_id[0..6];
 
     (String::from(contest_id), String::from(problem_id))

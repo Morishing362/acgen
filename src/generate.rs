@@ -133,9 +133,10 @@ fn main() {{
 mod tests {{
     use cli_test_dir::*;
 
-    const BIN: &'static str = "solution";
+    const BIN: &'static str = "solution_{}";
 
-"#
+"#,
+        problem_id
     );
 
     let hashtag = "#";
