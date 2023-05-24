@@ -4,7 +4,7 @@ use std::{
     collections::VecDeque,
     env,
     fs::{self, File},
-    io::Write,
+    io::{Read, Write},
 };
 
 pub async fn generate() -> Result<(), Box<dyn std::error::Error>> {
@@ -66,69 +66,48 @@ cli_test_dir = "*"
     let main_file = format!("{}/main.rs", src_dir);
     let mut file = File::create(&main_file).unwrap();
 
-    let mut main = format!(
-        r#"#![allow(unused)]
+    let mut source = String::new();
 
-use core::convert::TryInto;
-use std::{{
-    collections::{{HashMap, HashSet, VecDeque}},
-    io,
-    iter::FromIterator,
-}};
+    let header = match File::open("templates/header.txt") {
+        Ok(mut file) => {
+            let mut header = String::new();
+            file.read_to_string(&mut header)
+                .expect("Failed to read file to String.");
+            header
+        }
+        Err(_) => {
+            println!("header.txt not found.");
+            String::new()
+        }
+    };
+    source += &header;
 
-macro_rules! read_values {{
-    ( $t:ty; $( $x:ident ),+ ) => {{
-        let mut line = String::new();
-            io::stdin()
-                .read_line(&mut line)
-                .expect("Failed to read line");
-        let mut splited_line = line.trim().split(' ').flat_map(str::parse::<$t>);
-        $(
-            let $x: $t = splited_line.next().expect("Failed to parse input");
-        )*
-    }};
-}}
-
-macro_rules! read_vector {{
-    ( $t:ty; $v:ident ) => {{
-        let mut line = String::new();
-        io::stdin().read_line(&mut line).unwrap();
-        let $v: Vec<$t> = line.trim().split(' ').flat_map(str::parse::<$t>).collect();
-    }};
-}}
-
-macro_rules! read_matrix {{
-    ( $t:ty; $n:expr; $m:expr; $v:ident ) => {{
-        let mut matrix: Vec<Vec<$t>> = Vec::new();
-        for _i in 0..$n {{
-            let mut line = String::new();
-            io::stdin()
-                .read_line(&mut line)
-                .expect("Failed to read line");
-            let splited_line: Vec<$t> = line.trim().split(' ').flat_map(str::parse::<$t>).collect();
-            assert_eq!(splited_line.len(), $m);
-            matrix.push(splited_line);
-        }}
-        let $v = matrix;
-    }};
-}}
-
-macro_rules! print_vectorln {{
-    ( $v:ident ) => {{
-        println!(
-            "{{}}",
-            $v.iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<String>>()
-                .join(" ")
-        );
-    }};
-}}
-
+    let main = format!(
+        r#"
 fn main() {{
     // Code Here!
 }}
 
+"#
+    );
+    source += &main;
+
+    let footer = match File::open("templates/footer.txt") {
+        Ok(mut file) => {
+            let mut footer = String::new();
+            file.read_to_string(&mut footer)
+                .expect("Failed to read file to String.");
+            footer
+        }
+        Err(_) => {
+            println!("footer.txt not found.");
+            String::new()
+        }
+    };
+    source += &footer;
+
+    let test_beginning = format!(
+        r#"
 // Copy Above!
 mod tests {{
     use cli_test_dir::*;
@@ -138,12 +117,13 @@ mod tests {{
 "#,
         problem_id
     );
+    source += &test_beginning;
 
     let hashtag = "#";
     for (i, (input, output)) in sample_inputs.iter().zip(sample_outputs.iter()).enumerate() {
         let input = input.to_string() + &String::from("\n");
         let output = output.to_string() + &String::from("\n");
-        let content = format!(
+        let tests = format!(
             r#"    #[test]
     fn sample_{}() {{ 
         let testdir = TestDir::new(BIN, "");
@@ -160,11 +140,11 @@ mod tests {{
 "#,
             i, hashtag, input, hashtag, hashtag, output, hashtag
         );
-        main += &content;
+        source += &tests;
     }
 
-    main += "}\n";
-    file.write_all(main.as_bytes()).unwrap();
+    source += "}\n";
+    file.write_all(source.as_bytes()).unwrap();
 
     Ok(())
 }

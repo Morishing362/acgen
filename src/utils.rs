@@ -38,6 +38,7 @@ pub fn get_user_info_from_std() -> (String, String) {
     (String::from(username), String::from(password))
 }
 
+/// Returns (contest_id, problem_id).
 pub fn get_task_info() -> (String, String) {
     // Read toml file.
     let mut file = File::open("Cargo.toml").expect("Failed to open `Cargo.toml`.");
