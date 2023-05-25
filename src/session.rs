@@ -1,4 +1,4 @@
-use super::utils;
+use crate::utils;
 
 use reqwest::{self, cookie::Cookie, Response};
 use std::{

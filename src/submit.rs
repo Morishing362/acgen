@@ -1,5 +1,5 @@
-use super::session::Session;
-use super::utils;
+use crate::session::Session;
+use crate::utils;
 
 use regex::Regex;
 use std::fs::File;

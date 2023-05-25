@@ -1,5 +1,6 @@
+use crate::session::Session;
+
 use regex::Regex;
-use reqwest;
 use std::{
     collections::VecDeque,
     env,
@@ -7,12 +8,10 @@ use std::{
     io::{Read, Write},
 };
 
-pub async fn generate() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn generate(session: &mut Box<Session>) -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let url = String::from(&args[2]);
-    let client = reqwest::Client::new();
-
-    let res = client.get(&url).send().await?;
+    let res = session.get_request(url.as_str()).await?;
 
     let body = res.text().await?;
 
@@ -51,8 +50,6 @@ pub async fn generate() -> Result<(), Box<dyn std::error::Error>> {
 name = "{}"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 cli_test_dir = "*"

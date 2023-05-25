@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let command = args[1].clone();
     if command == String::from("generate") {
-        return generate::generate().await;
+        return generate::generate(&mut session).await;
     }
     if command == String::from("submit") {
         return submit::submit(&mut session).await;
