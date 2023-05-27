@@ -11,6 +11,11 @@ use std::{
 pub async fn generate(session: &mut Box<Session>) -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let url = String::from(&args[2]);
+
+    if !session.has_login_cache().await? {
+        session.login().await?;
+    }
+
     let res = session.get_request(url.as_str()).await?;
 
     let body = res.text().await?;
