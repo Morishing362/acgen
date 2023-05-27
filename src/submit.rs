@@ -6,8 +6,8 @@ use std::fs::File;
 use std::io::Read;
 
 pub async fn submit(session: &mut Box<Session>) -> Result<(), Box<dyn std::error::Error>> {
-    if !session.has_login_cache().await? {
-        session.login().await?;
+    if !session.has_login_cache(format!("..")).await? {
+        session.login(format!("..")).await?;
     }
 
     let (contest_id, problem_id) = utils::get_task_info();

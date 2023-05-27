@@ -24,9 +24,12 @@ impl Session {
         }
     }
 
-    pub async fn has_login_cache(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+    pub async fn has_login_cache(
+        &mut self,
+        work_space: String,
+    ) -> Result<bool, Box<dyn std::error::Error>> {
         // Read toml file.
-        match File::open("../cookies.txt") {
+        match File::open(format!("{}/cookies.txt", work_space)) {
             Ok(mut file) => {
                 let mut cookie_header = String::new();
                 file.read_to_string(&mut cookie_header)
@@ -44,7 +47,7 @@ impl Session {
         }
     }
 
-    pub async fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn login(&mut self, work_space: String) -> Result<(), Box<dyn std::error::Error>> {
         let res = self.get_request("https://atcoder.jp/login").await?;
 
         // Get cookies of the login session.
@@ -83,8 +86,7 @@ impl Session {
             .collect::<Vec<String>>()
             .join("; ");
 
-        let file = format!("../cookies.txt");
-        let mut file = File::create(&file).unwrap();
+        let mut file = File::create(format!("{}/cookies.txt", work_space)).unwrap();
         file.write_all(cookie_header.as_bytes()).unwrap();
 
         // Update cookies.
