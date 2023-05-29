@@ -24,7 +24,7 @@ impl Session {
         }
     }
 
-    pub async fn has_login_cache(
+    pub async fn has_cookies(
         &mut self,
         work_space: String,
     ) -> Result<bool, Box<dyn std::error::Error>> {
@@ -32,16 +32,15 @@ impl Session {
         match File::open(format!("{}/cookies.txt", work_space)) {
             Ok(mut file) => {
                 let mut cookie_header = String::new();
-                file.read_to_string(&mut cookie_header)
-                    .expect("Failed to read file to String.");
-                println!("Login chache exist.");
+                file.read_to_string(&mut cookie_header)?;
+                println!("The login session exists.");
 
                 // Update cookies.
                 self.cookie_header = cookie_header;
                 Ok(true)
             }
             Err(_) => {
-                println!("Login cache not found.");
+                println!("No login session.");
                 Ok(false)
             }
         }
@@ -51,9 +50,9 @@ impl Session {
         let res = self.get_request("https://atcoder.jp/login").await?;
 
         // Get cookies of the login session.
-        let cookies: Vec<Cookie> = res.cookies().collect();
-        self.cookie_header = cookies
-            // .to_header_string();
+        self.cookie_header = res
+            .cookies()
+            .collect::<Vec<Cookie>>()
             .into_iter()
             .map(|cookie| format!("{}={}", cookie.name(), cookie.value()))
             .collect::<Vec<String>>()
@@ -79,15 +78,16 @@ impl Session {
         println!("Login: {}", res.status().to_string());
 
         // Cache cookies.
-        let cookies: Vec<Cookie> = res.cookies().collect();
-        let cookie_header = cookies
+        let cookie_header = res
+            .cookies()
+            .collect::<Vec<Cookie>>()
             .into_iter()
             .map(|cookie| format!("{}={}", cookie.name(), cookie.value()))
             .collect::<Vec<String>>()
             .join("; ");
 
-        let mut file = File::create(format!("{}/cookies.txt", work_space)).unwrap();
-        file.write_all(cookie_header.as_bytes()).unwrap();
+        let mut file = File::create(format!("{}/cookies.txt", work_space))?;
+        file.write_all(cookie_header.as_bytes())?;
 
         // Update cookies.
         self.cookie_header = cookie_header;
