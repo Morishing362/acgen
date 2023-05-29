@@ -27,8 +27,8 @@ Submit code if tests passed.
 acgen submit
 ```
 
-## Edit header & footer
-You can edit header & footer of code generation. Place those 2 files under `[workspace]/templates`.
+## Edit header, footer and dependencies
+You can edit header, footer and dependencies for your code generation. Place those 3 files under `[workspace]/templates/`.
 
 ## Cookie
 Login session cookies will be stored in the work space directory after you login with acgen. You can remove the cookie file whenever you want.

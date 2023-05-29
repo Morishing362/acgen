@@ -1,34 +1,32 @@
-use crate::session::Session;
+use crate::{session::Session, utils::read_template_file};
 
 use regex::Regex;
 use std::{
     collections::VecDeque,
     env,
     fs::{self, File},
-    io::{Read, Write},
+    io::Write,
 };
 
 pub async fn generate(session: &mut Box<Session>) -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
-    let url = String::from(&args[2]);
-
     if !session.has_login_cache(format!(".")).await? {
         session.login(format!(".")).await?;
     }
 
-    let res = session.get_request(url.as_str()).await?;
+    let args: Vec<String> = env::args().collect();
+    let url = String::from(&args[2]);
 
+    let res = session.get_request(url.as_str()).await?;
     let body = res.text().await?;
 
     let mut sample_inputs = VecDeque::<String>::new();
-    let mut sample_outputs = VecDeque::<String>::new();
-
     let sample_input_re = Regex::new(r#"(?s)<h3>Sample Input \d+</h3><pre>(.*?)</pre>"#).unwrap();
     for cap in sample_input_re.captures_iter(body.as_str()) {
         let input = cap[1].trim().to_string();
         sample_inputs.push_back(input);
     }
 
+    let mut sample_outputs = VecDeque::<String>::new();
     let sample_output_re = Regex::new(r#"(?s)<h3>Sample Output \d+</h3><pre>(.*?)</pre>"#).unwrap();
     for cap in sample_output_re.captures_iter(body.as_str()) {
         let output = cap[1].trim().to_string();
@@ -58,8 +56,10 @@ edition = "2021"
 
 [dependencies]
 cli_test_dir = "*"
+{}
 "#,
-        project_name
+        project_name,
+        read_template_file("templates/dependencies.txt")
     );
 
     file.write_all(dependencies.as_bytes()).unwrap();
@@ -70,21 +70,22 @@ cli_test_dir = "*"
 
     let mut source = String::new();
 
-    let header = match File::open("templates/header.txt") {
-        Ok(mut file) => {
-            let mut header = String::new();
-            file.read_to_string(&mut header)
-                .expect("Failed to read file to String.");
-            header
-        }
-        Err(_) => {
-            println!("header.txt not found.");
-            String::new()
-        }
-    };
-    source += &header;
+    // let header = ;
+    // let header = match File::open("templates/header.txt") {
+    //     Ok(mut file) => {
+    //         let mut header = String::new();
+    //         file.read_to_string(&mut header)
+    //             .expect("Failed to read file to String.");
+    //         header
+    //     }
+    //     Err(_) => {
+    //         println!("header.txt not found.");
+    //         String::new()
+    //     }
+    // };
+    source += &read_template_file("templates/header.txt");
 
-    let main = format!(
+    source += &format!(
         r#"
 fn main() {{
     // Code Here!
@@ -92,25 +93,12 @@ fn main() {{
 
 "#
     );
-    source += &main;
 
-    let footer = match File::open("templates/footer.txt") {
-        Ok(mut file) => {
-            let mut footer = String::new();
-            file.read_to_string(&mut footer)
-                .expect("Failed to read file to String.");
-            footer
-        }
-        Err(_) => {
-            println!("footer.txt not found.");
-            String::new()
-        }
-    };
-    source += &footer;
+    source += &read_template_file("templates/footer.txt");
 
-    let test_beginning = format!(
+    source += &format!(
         r#"
-// Copy Above!
+// Copy Above! (Do not delete this line.)
 mod tests {{
     use cli_test_dir::*;
 
@@ -119,7 +107,6 @@ mod tests {{
 "#,
         problem_id
     );
-    source += &test_beginning;
 
     let hashtag = "#";
     for (i, (input, output)) in sample_inputs.iter().zip(sample_outputs.iter()).enumerate() {

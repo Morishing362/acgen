@@ -55,3 +55,19 @@ pub fn get_task_info() -> (String, String) {
 
     (String::from(contest_id), String::from(problem_id))
 }
+
+/// Returns a file body as String.
+pub fn read_template_file(template: &str) -> String {
+    match File::open(template) {
+        Ok(mut file) => {
+            let mut header = String::new();
+            file.read_to_string(&mut header)
+                .expect("Failed to read file to String.");
+            header
+        }
+        Err(_) => {
+            println!("header.txt not found.");
+            String::new()
+        }
+    }
+}
